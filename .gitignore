@@ -12,3 +12,4 @@ wheels/
 # AI assistant directories
 .serena/
 .claude/
+.env
