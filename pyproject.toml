@@ -1,0 +1,9 @@
+[project]
+name = "neo4j-cw-manager"
+version = "0.1.0"
+description = "タスク管理、ナレッジ管理ツール with Neo4j"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.22.0",
+]
