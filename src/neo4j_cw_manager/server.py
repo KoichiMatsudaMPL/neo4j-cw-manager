@@ -27,5 +27,10 @@ def get_server_info() -> str:
     return "This is a sample MCP server for neo4j-cw-manager"
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the MCP server."""
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

@@ -7,3 +7,13 @@ requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.22.0",
 ]
+
+[project.scripts]
+neo4j-cw-manager = "neo4j_cw_manager.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/neo4j_cw_manager"]

@@ -31,7 +31,7 @@ uv sync
   "mcpServers": {
     "neo4j-cw-manager": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/neo4j-cw-manager", "python", "main.py"]
+      "args": ["run", "--directory", "/path/to/neo4j-cw-manager", "neo4j-cw-manager"]
     }
   }
 }
@@ -43,7 +43,19 @@ uv sync
 
 ```bash
 # MCP Inspector でテスト
-uv run mcp dev main.py
+uv run mcp dev src/neo4j_cw_manager/server.py
+```
+
+## プロジェクト構成
+
+```
+neo4j-cw-manager/
+├── src/
+│   └── neo4j_cw_manager/
+│       ├── __init__.py
+│       └── server.py      # MCP サーバー本体
+├── pyproject.toml
+└── README.md
 ```
 
 ## 現在実装されている機能
