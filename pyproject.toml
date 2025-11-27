@@ -4,9 +4,21 @@ version = "0.1.0"
 description = "タスク管理、ナレッジ管理ツール with Neo4j"
 readme = "README.md"
 requires-python = ">=3.11"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "mcp[cli]>=1.22.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/KoichiMatsudaMPL/neo4j-cw-manager"
+Repository = "https://github.com/KoichiMatsudaMPL/neo4j-cw-manager"
 
 [project.scripts]
 neo4j-cw-manager = "neo4j_cw_manager.server:main"

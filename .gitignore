@@ -13,3 +13,8 @@ wheels/
 .serena/
 .claude/
 .env
+
+# secrets
+.secrets/
+.mcp.json
+github_pat_*
