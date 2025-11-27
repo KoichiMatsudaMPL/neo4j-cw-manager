@@ -2,16 +2,12 @@
 
 from .config import Neo4jConfig
 from .connection import Neo4jConnection, get_connection
-from .operations import (
-    create_node,
+from .nodes import create_node, delete_node, find_node_by_id, find_nodes, update_node
+from .query import run_query
+from .relationships import (
     create_relationship,
-    delete_node,
     delete_relationship,
-    find_node_by_id,
-    find_nodes,
     find_relationships,
-    run_query,
-    update_node,
     update_relationship,
 )
 

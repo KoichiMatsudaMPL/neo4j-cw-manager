@@ -49,5 +49,17 @@ The codebase currently contains:
 - Tools: `add()`, `multiply()` - basic arithmetic operations
 - Resources: `get_greeting()`, `get_server_info()` - informational endpoints
 
+## Coding Guidelines
+
+### Single Responsibility Principle
+- Each module/file should have one responsibility
+- Do not mix multiple concerns in a single file
+- Split large files into separate modules by responsibility
+
+### Separation of Concerns
+- Separate utility functions from business logic
+- Keep data access, business logic, and presentation layers distinct
+- Use dedicated modules for different operation types (e.g., nodes.py, relationships.py)
+
 ## Python Version
 Requires Python >=3.11
