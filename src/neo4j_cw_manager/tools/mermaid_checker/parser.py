@@ -17,21 +17,21 @@ from pathlib import Path
 from .models import MermaidBlock
 
 # Markdown fence markers
-MERMAID_FENCE_START = '```mermaid'
-CODE_FENCE_END = '```'
+MERMAID_FENCE_START = "```mermaid"
+CODE_FENCE_END = "```"
 
 # Diagram type keywords (REQ-NF-003)
 DIAGRAM_TYPES = {
-    'flowchart': 'flowchart',
-    'graph': 'flowchart',  # Alias for flowchart
-    'sequenceDiagram': 'sequenceDiagram',
-    'classDiagram': 'classDiagram',
-    'stateDiagram': 'stateDiagram',
-    'stateDiagram-v2': 'stateDiagram',  # Version 2
-    'erDiagram': 'erDiagram',
-    'gantt': 'gantt',
-    'pie': 'pie',
-    'gitGraph': 'gitGraph',
+    "flowchart": "flowchart",
+    "graph": "flowchart",  # Alias for flowchart
+    "sequenceDiagram": "sequenceDiagram",
+    "classDiagram": "classDiagram",
+    "stateDiagram": "stateDiagram",
+    "stateDiagram-v2": "stateDiagram",  # Version 2
+    "erDiagram": "erDiagram",
+    "gantt": "gantt",
+    "pie": "pie",
+    "gitGraph": "gitGraph",
 }
 
 
@@ -63,7 +63,7 @@ def extract_mermaid_blocks(file_path: str) -> List[MermaidBlock]:
     # Parse lines and extract blocks
     # Handles: TC-PARSER-N001, TC-PARSER-N002, TC-PARSER-B001, TC-PARSER-B002
     # 🟢
-    lines = content.split('\n')
+    lines = content.split("\n")
     return _parse_lines(lines)
 
 
@@ -92,7 +92,7 @@ def _read_file_content(file_path: str) -> str:
     # Handles: TC-PARSER-N012 (UTF-8/Japanese support)
     # 🟢
     try:
-        return path.read_text(encoding='utf-8')
+        return path.read_text(encoding="utf-8")
     except UnicodeDecodeError as e:
         raise IOError(f"Failed to decode file as UTF-8: {e}") from e
     except Exception as e:
@@ -136,7 +136,7 @@ def _parse_lines(lines: List[str]) -> List[MermaidBlock]:
                 # End of Mermaid block - create MermaidBlock object
                 # Handles: TC-PARSER-N001 (line numbers), TC-PARSER-N003-N011 (types)
                 # 🟢
-                code = '\n'.join(block_code_lines)
+                code = "\n".join(block_code_lines)
                 diagram_type = _detect_diagram_type(code)
 
                 block = MermaidBlock(
@@ -144,7 +144,7 @@ def _parse_lines(lines: List[str]) -> List[MermaidBlock]:
                     start_line=block_start_line,
                     end_line=line_num,
                     code=code,
-                    diagram_type=diagram_type
+                    diagram_type=diagram_type,
                 )
                 blocks.append(block)
 
@@ -182,7 +182,7 @@ def _detect_diagram_type(code: str) -> Optional[str]:
     """
     # Get first non-empty line
     # 🟢
-    for line in code.split('\n'):
+    for line in code.split("\n"):
         line = line.strip()
         if line:
             # Check against known diagram types

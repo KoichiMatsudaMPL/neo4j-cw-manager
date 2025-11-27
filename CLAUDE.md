@@ -13,10 +13,16 @@ This project uses `uv` for Python package management:
 - Install dependencies: `uv sync`
 - Add new dependencies: `uv add <package-name>`
 
-### Running the Server
-Start the MCP server with stdio transport:
+### Linting
 ```bash
-python main.py
+uv run ruff check .
+uv run ruff format .
+```
+
+### Testing
+Use MCP Inspector to verify the server:
+```bash
+uv run mcp dev src/neo4j_cw_manager/server.py
 ```
 
 ## Architecture

@@ -23,9 +23,9 @@ from .parser import DIAGRAM_TYPES
 
 # Constants
 DEFAULT_TIMEOUT = 30
-TEMP_FILE_SUFFIX = '.mmd'
-OUTPUT_FILE_SUFFIX = '.svg'
-TEMP_FILE_ENCODING = 'utf-8'
+TEMP_FILE_SUFFIX = ".mmd"
+OUTPUT_FILE_SUFFIX = ".svg"
+TEMP_FILE_ENCODING = "utf-8"
 
 # Error messages
 ERROR_CODE_REQUIRED = "Code is required"
@@ -34,7 +34,7 @@ ERROR_VALIDATION_FAILED = "Validation failed"
 ERROR_TIMEOUT_TEMPLATE = "Validation timed out after {timeout}s"
 
 # Regex patterns for error parsing
-LINE_NUMBER_PATTERN = re.compile(r'line\s+(\d+)', re.IGNORECASE)
+LINE_NUMBER_PATTERN = re.compile(r"line\s+(\d+)", re.IGNORECASE)
 
 
 async def validate_code(code: str, timeout: int = DEFAULT_TIMEOUT) -> ValidationResult:
@@ -91,7 +91,7 @@ async def validate_code(code: str, timeout: int = DEFAULT_TIMEOUT) -> Validation
                 valid=True,
                 diagram_type=diagram_type,
                 error_line=None,
-                error_message=None
+                error_message=None,
             )
 
         # Error Case: Parse CLI output for error details
@@ -102,7 +102,7 @@ async def validate_code(code: str, timeout: int = DEFAULT_TIMEOUT) -> Validation
             valid=False,
             diagram_type=diagram_type,
             error_line=error_line,
-            error_message=error_message
+            error_message=error_message,
         )
 
     except FileNotFoundError:
@@ -113,7 +113,7 @@ async def validate_code(code: str, timeout: int = DEFAULT_TIMEOUT) -> Validation
             valid=False,
             diagram_type=None,
             error_line=None,
-            error_message=ERROR_CLI_NOT_FOUND
+            error_message=ERROR_CLI_NOT_FOUND,
         )
 
     except asyncio.TimeoutError:
@@ -124,7 +124,7 @@ async def validate_code(code: str, timeout: int = DEFAULT_TIMEOUT) -> Validation
             valid=False,
             diagram_type=None,
             error_line=None,
-            error_message=ERROR_TIMEOUT_TEMPLATE.format(timeout=timeout)
+            error_message=ERROR_TIMEOUT_TEMPLATE.format(timeout=timeout),
         )
 
     finally:
@@ -159,7 +159,7 @@ def _detect_diagram_type(code: str) -> Optional[str]:
     # Implementation: Check first non-empty line against known types
     # Test Correspondence: TC-CHECKER-N001-N011
     # 🟢
-    for line in code.split('\n'):
+    for line in code.split("\n"):
         line = line.strip()
         if line:
             for keyword, diagram_type in DIAGRAM_TYPES.items():
@@ -193,10 +193,7 @@ def _create_temp_file(code: str) -> Path:
     # UTF-8 encoding for Japanese character support
     # 🟢
     with tempfile.NamedTemporaryFile(
-        mode='w',
-        suffix=TEMP_FILE_SUFFIX,
-        encoding=TEMP_FILE_ENCODING,
-        delete=False
+        mode="w", suffix=TEMP_FILE_SUFFIX, encoding=TEMP_FILE_ENCODING, delete=False
     ) as f:
         f.write(code)
         return Path(f.name)
@@ -234,11 +231,13 @@ async def _run_mmdc(temp_file: Path, timeout: int) -> tuple[int, str, str]:
         # Command: mmdc --input <file> --output <temp_output>
         # 🟢
         process = await asyncio.create_subprocess_exec(
-            'mmdc',
-            '--input', str(temp_file),
-            '--output', str(output_file),
+            "mmdc",
+            "--input",
+            str(temp_file),
+            "--output",
+            str(output_file),
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
 
         try:
@@ -246,12 +245,11 @@ async def _run_mmdc(temp_file: Path, timeout: int) -> tuple[int, str, str]:
             # Test Correspondence: TC-CHECKER-N012, TC-CHECKER-B004, TC-CHECKER-B005
             # 🟢
             stdout, stderr = await asyncio.wait_for(
-                process.communicate(),
-                timeout=timeout
+                process.communicate(), timeout=timeout
             )
             # returncode should always be set after communicate()
             return_code = process.returncode if process.returncode is not None else 1
-            return return_code, stdout.decode('utf-8'), stderr.decode('utf-8')
+            return return_code, stdout.decode("utf-8"), stderr.decode("utf-8")
 
         except asyncio.TimeoutError:
             # Timeout: Kill process and re-raise
@@ -303,7 +301,7 @@ def _parse_cli_error(stderr: str) -> tuple[Optional[int], str]:
     # 🟢
     if error_message:
         # Take first meaningful line
-        lines = [line.strip() for line in error_message.split('\n') if line.strip()]
+        lines = [line.strip() for line in error_message.split("\n") if line.strip()]
         if lines:
             error_message = lines[0]
         # Fallback to generic message if empty

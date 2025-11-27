@@ -21,32 +21,20 @@ class MermaidBlock(BaseModel):
     🟢
     """
 
-    index: int = Field(
-        ...,
-        description="1-based index of the block in the file",
-        ge=1
-    )
+    index: int = Field(..., description="1-based index of the block in the file", ge=1)
 
     start_line: int = Field(
-        ...,
-        description="Line number where the block starts (1-based)",
-        ge=1
+        ..., description="Line number where the block starts (1-based)", ge=1
     )
 
     end_line: int = Field(
-        ...,
-        description="Line number where the block ends (1-based)",
-        ge=1
+        ..., description="Line number where the block ends (1-based)", ge=1
     )
 
-    code: str = Field(
-        ...,
-        description="The Mermaid diagram code content"
-    )
+    code: str = Field(..., description="The Mermaid diagram code content")
 
     diagram_type: Optional[str] = Field(
-        None,
-        description="Detected diagram type (flowchart, sequenceDiagram, etc.)"
+        None, description="Detected diagram type (flowchart, sequenceDiagram, etc.)"
     )
 
 
@@ -59,25 +47,18 @@ class ValidationResult(BaseModel):
     🟢
     """
 
-    valid: bool = Field(
-        ...,
-        description="Whether the code is syntactically valid"
-    )
+    valid: bool = Field(..., description="Whether the code is syntactically valid")
 
     diagram_type: Optional[str] = Field(
-        None,
-        description="Detected diagram type if parsing succeeded"
+        None, description="Detected diagram type if parsing succeeded"
     )
 
     error_line: Optional[int] = Field(
-        None,
-        description="Line number within the block where error occurred",
-        ge=1
+        None, description="Line number within the block where error occurred", ge=1
     )
 
     error_message: Optional[str] = Field(
-        None,
-        description="Error message describing the syntax error"
+        None, description="Error message describing the syntax error"
     )
 
 
@@ -90,14 +71,10 @@ class BlockValidationResult(BaseModel):
     🟢
     """
 
-    block: MermaidBlock = Field(
-        ...,
-        description="The Mermaid block that was validated"
-    )
+    block: MermaidBlock = Field(..., description="The Mermaid block that was validated")
 
     result: ValidationResult = Field(
-        ...,
-        description="Validation result for this block"
+        ..., description="Validation result for this block"
     )
 
 
@@ -110,32 +87,19 @@ class CheckFileResult(BaseModel):
     🟢
     """
 
-    file_path: str = Field(
-        ...,
-        description="Path to the checked file"
-    )
+    file_path: str = Field(..., description="Path to the checked file")
 
     total_blocks: int = Field(
-        ...,
-        description="Total number of Mermaid blocks found",
-        ge=0
+        ..., description="Total number of Mermaid blocks found", ge=0
     )
 
-    valid_blocks: int = Field(
-        ...,
-        description="Number of valid blocks",
-        ge=0
-    )
+    valid_blocks: int = Field(..., description="Number of valid blocks", ge=0)
 
-    invalid_blocks: int = Field(
-        ...,
-        description="Number of invalid blocks",
-        ge=0
-    )
+    invalid_blocks: int = Field(..., description="Number of invalid blocks", ge=0)
 
     errors: list[BlockValidationResult] = Field(
         default_factory=list,
-        description="List of validation results for invalid blocks only"
+        description="List of validation results for invalid blocks only",
     )
 
 
@@ -148,26 +112,15 @@ class CheckCodeResult(BaseModel):
     🟢
     """
 
-    valid: bool = Field(
-        ...,
-        description="Whether the code is syntactically valid"
-    )
+    valid: bool = Field(..., description="Whether the code is syntactically valid")
 
-    diagram_type: Optional[str] = Field(
-        None,
-        description="Detected diagram type"
-    )
+    diagram_type: Optional[str] = Field(None, description="Detected diagram type")
 
     error_line: Optional[int] = Field(
-        None,
-        description="Line number where error occurred (1-based)",
-        ge=1
+        None, description="Line number where error occurred (1-based)", ge=1
     )
 
-    error_message: Optional[str] = Field(
-        None,
-        description="Error message if invalid"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if invalid")
 
 
 class ListBlocksResult(BaseModel):
@@ -179,18 +132,12 @@ class ListBlocksResult(BaseModel):
     🟢
     """
 
-    file_path: str = Field(
-        ...,
-        description="Path to the scanned file"
-    )
+    file_path: str = Field(..., description="Path to the scanned file")
 
     total_blocks: int = Field(
-        ...,
-        description="Total number of Mermaid blocks found",
-        ge=0
+        ..., description="Total number of Mermaid blocks found", ge=0
     )
 
     blocks: list[MermaidBlock] = Field(
-        default_factory=list,
-        description="List of all Mermaid blocks found"
+        default_factory=list, description="List of all Mermaid blocks found"
     )

@@ -314,7 +314,7 @@ def _format_list_result(file_path: str, blocks: List[MermaidBlock]) -> str:
     for block in blocks:
         # Calculate content line count (excludes fence markers)
         # Lines count = number of lines in block.code
-        content_lines = len(block.code.split('\n')) if block.code else 0
+        content_lines = len(block.code.split("\n")) if block.code else 0
 
         # Format diagram type (use "unknown" if None)
         diagram_type = block.diagram_type or "unknown"

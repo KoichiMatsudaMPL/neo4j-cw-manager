@@ -51,7 +51,7 @@ async def create_node(
     Returns:
         JSON string with created node data including element ID.
     """
-    label_list = [l.strip() for l in labels.split(",") if l.strip()]
+    label_list = [label.strip() for label in labels.split(",") if label.strip()]
     props = _parse_properties(properties)
     result = neo4j_create_node(label_list, props)
     return _format_result(result)
@@ -75,7 +75,7 @@ async def find_nodes(
     """
     label_list = None
     if labels:
-        label_list = [l.strip() for l in labels.split(",") if l.strip()]
+        label_list = [label.strip() for label in labels.split(",") if label.strip()]
     props = _parse_properties(properties) if properties else None
     results = neo4j_find_nodes(label_list, props, limit)
     return _format_result(results)
