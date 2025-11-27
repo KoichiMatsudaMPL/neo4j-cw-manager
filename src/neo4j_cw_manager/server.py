@@ -1,11 +1,23 @@
+import atexit
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
+from neo4j_cw_manager.core import get_connection
 from neo4j_cw_manager.tools import (
     check_mermaid_code,
     check_mermaid_file,
     list_mermaid_blocks,
+    neo4j_create_node,
+    neo4j_create_relationship,
+    neo4j_delete_node,
+    neo4j_delete_relationship,
+    neo4j_find_nodes,
+    neo4j_find_relationships,
+    neo4j_get_node,
+    neo4j_run_cypher_query,
+    neo4j_update_node,
+    neo4j_update_relationship,
 )
 
 mcp = FastMCP("neo4j-cw-manager")
@@ -65,6 +77,191 @@ async def mermaid_list_blocks(file_path: str) -> str:
     return await list_mermaid_blocks(file_path)
 
 
+# Neo4j Graph Database Tools
+
+
+@mcp.tool()
+async def graph_create_node(labels: str, properties: str) -> str:
+    """
+    Create a node with given labels and properties.
+
+    Args:
+        labels: Comma-separated list of node labels (e.g., "Person,Employee")
+        properties: JSON string of node properties (e.g., '{"name": "John", "age": 30}')
+
+    Returns:
+        JSON string with created node data including element ID.
+    """
+    return await neo4j_create_node(labels, properties)
+
+
+@mcp.tool()
+async def graph_find_nodes(
+    labels: Optional[str] = None,
+    properties: Optional[str] = None,
+    limit: int = 100,
+) -> str:
+    """
+    Find nodes matching labels and/or properties.
+
+    Args:
+        labels: Optional comma-separated list of labels to match.
+        properties: Optional JSON string of properties to match.
+        limit: Maximum number of results (default: 100).
+
+    Returns:
+        JSON string with list of matching nodes.
+    """
+    return await neo4j_find_nodes(labels, properties, limit)
+
+
+@mcp.tool()
+async def graph_get_node(element_id: str) -> str:
+    """
+    Get a node by its element ID.
+
+    Args:
+        element_id: Neo4j element ID.
+
+    Returns:
+        JSON string with node data or error message.
+    """
+    return await neo4j_get_node(element_id)
+
+
+@mcp.tool()
+async def graph_update_node(
+    element_id: str,
+    properties: str,
+    merge: bool = True,
+) -> str:
+    """
+    Update node properties.
+
+    Args:
+        element_id: Neo4j element ID.
+        properties: JSON string of properties to update.
+        merge: If True, merge with existing properties. If False, replace all.
+
+    Returns:
+        JSON string with updated node data or error message.
+    """
+    return await neo4j_update_node(element_id, properties, merge)
+
+
+@mcp.tool()
+async def graph_delete_node(element_id: str, detach: bool = True) -> str:
+    """
+    Delete a node by its element ID.
+
+    Args:
+        element_id: Neo4j element ID.
+        detach: If True, delete all relationships first (default: True).
+
+    Returns:
+        Success or error message.
+    """
+    return await neo4j_delete_node(element_id, detach)
+
+
+@mcp.tool()
+async def graph_create_relationship(
+    from_id: str,
+    to_id: str,
+    rel_type: str,
+    properties: Optional[str] = None,
+) -> str:
+    """
+    Create a relationship between two nodes.
+
+    Args:
+        from_id: Source node element ID.
+        to_id: Target node element ID.
+        rel_type: Relationship type (e.g., "KNOWS", "WORKS_AT").
+        properties: Optional JSON string of relationship properties.
+
+    Returns:
+        JSON string with created relationship data.
+    """
+    return await neo4j_create_relationship(from_id, to_id, rel_type, properties)
+
+
+@mcp.tool()
+async def graph_find_relationships(
+    from_id: Optional[str] = None,
+    to_id: Optional[str] = None,
+    rel_type: Optional[str] = None,
+    limit: int = 100,
+) -> str:
+    """
+    Find relationships matching criteria.
+
+    Args:
+        from_id: Optional source node element ID.
+        to_id: Optional target node element ID.
+        rel_type: Optional relationship type.
+        limit: Maximum number of results (default: 100).
+
+    Returns:
+        JSON string with list of matching relationships.
+    """
+    return await neo4j_find_relationships(from_id, to_id, rel_type, limit)
+
+
+@mcp.tool()
+async def graph_update_relationship(
+    element_id: str,
+    properties: str,
+    merge: bool = True,
+) -> str:
+    """
+    Update relationship properties.
+
+    Args:
+        element_id: Relationship element ID.
+        properties: JSON string of properties to update.
+        merge: If True, merge with existing properties. If False, replace all.
+
+    Returns:
+        JSON string with updated relationship data or error message.
+    """
+    return await neo4j_update_relationship(element_id, properties, merge)
+
+
+@mcp.tool()
+async def graph_delete_relationship(element_id: str) -> str:
+    """
+    Delete a relationship by its element ID.
+
+    Args:
+        element_id: Relationship element ID.
+
+    Returns:
+        Success or error message.
+    """
+    return await neo4j_delete_relationship(element_id)
+
+
+@mcp.tool()
+async def graph_query(
+    query: str,
+    parameters: Optional[str] = None,
+    write: bool = False,
+) -> str:
+    """
+    Run a custom Cypher query.
+
+    Args:
+        query: Cypher query string.
+        parameters: Optional JSON string of query parameters.
+        write: If True, execute as write transaction.
+
+    Returns:
+        JSON string with query results.
+    """
+    return await neo4j_run_cypher_query(query, parameters, write)
+
+
 @mcp.resource("greeting://{name}")
 def get_greeting(name: str) -> str:
     """Get a personalized greeting"""
@@ -77,8 +274,20 @@ def get_server_info() -> str:
     return "This is a sample MCP server for neo4j-cw-manager"
 
 
+def _cleanup_neo4j() -> None:
+    """Close Neo4j connection on exit."""
+    try:
+        conn = get_connection()
+        conn.close()
+    except Exception:
+        pass
+
+
 def main():
     """Entry point for the MCP server."""
+    conn = get_connection()
+    conn.initialize()
+    atexit.register(_cleanup_neo4j)
     mcp.run(transport="stdio")
 
 

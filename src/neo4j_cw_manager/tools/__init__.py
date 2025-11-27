@@ -7,9 +7,33 @@ from .mermaid_checker import (
     check_mermaid_file,
     list_mermaid_blocks,
 )
+from .memory import (
+    create_node as neo4j_create_node,
+    create_relationship as neo4j_create_relationship,
+    delete_node as neo4j_delete_node,
+    delete_relationship as neo4j_delete_relationship,
+    find_nodes as neo4j_find_nodes,
+    find_relationships as neo4j_find_relationships,
+    get_node as neo4j_get_node,
+    run_cypher_query as neo4j_run_cypher_query,
+    update_node as neo4j_update_node,
+    update_relationship as neo4j_update_relationship,
+)
 
 __all__ = [
+    # Mermaid tools
     "check_mermaid_code",
     "check_mermaid_file",
     "list_mermaid_blocks",
+    # Neo4j tools
+    "neo4j_create_node",
+    "neo4j_find_nodes",
+    "neo4j_get_node",
+    "neo4j_update_node",
+    "neo4j_delete_node",
+    "neo4j_create_relationship",
+    "neo4j_find_relationships",
+    "neo4j_update_relationship",
+    "neo4j_delete_relationship",
+    "neo4j_run_cypher_query",
 ]
