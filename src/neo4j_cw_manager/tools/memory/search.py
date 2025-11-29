@@ -38,11 +38,19 @@ async def search_nodes(
         project = get_default_project()
 
     # Build RETURN and ORDER BY clauses based on fields parameter
+    base_fields = {"element_id", "type", "project", "name"}
+
     if fields:
         field_list = [f.strip() for f in fields.split(",") if f.strip()]
         if field_list:
-            field_returns = ", ".join([f"n.{field} as {field}" for field in field_list])
-            return_clause = f"RETURN elementId(n) as element_id, labels(n)[0] as type, p.name as project, n.name as name, {field_returns}"
+            # Exclude fields that are already in base fields
+            additional_fields = [f for f in field_list if f not in base_fields]
+            if additional_fields:
+                field_returns = ", ".join([f"n.{field} as {field}" for field in additional_fields])
+                return_clause = f"RETURN elementId(n) as element_id, labels(n)[0] as type, p.name as project, n.name as name, {field_returns}"
+            else:
+                # Only base fields requested
+                return_clause = "RETURN elementId(n) as element_id, labels(n)[0] as type, p.name as project, n.name as name"
             order_clause = "ORDER BY project, type, name"
         else:
             # Empty fields list - return all properties
