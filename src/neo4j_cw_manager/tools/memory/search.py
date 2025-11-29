@@ -37,12 +37,13 @@ async def search_nodes(
     if project is None:
         project = get_default_project()
 
-    # Build RETURN clause based on fields parameter
+    # Build RETURN and ORDER BY clauses based on fields parameter
     if fields:
         field_list = [f.strip() for f in fields.split(",") if f.strip()]
         if field_list:
             field_returns = ", ".join([f"n.{field} as {field}" for field in field_list])
-            return_clause = f"RETURN elementId(n) as element_id, {field_returns}"
+            return_clause = f"RETURN elementId(n) as element_id, labels(n)[0] as type, p.name as project, n.name as name, {field_returns}"
+            order_clause = "ORDER BY project, type, name"
         else:
             # Empty fields list - return all properties
             return_clause = """RETURN elementId(n) as element_id,
@@ -51,6 +52,7 @@ async def search_nodes(
                    n.summary as summary,
                    p.name as project,
                    properties(n) as properties"""
+            order_clause = "ORDER BY project, type, name"
     else:
         # fields not specified - return all properties
         return_clause = """RETURN elementId(n) as element_id,
@@ -59,6 +61,7 @@ async def search_nodes(
                n.summary as summary,
                p.name as project,
                properties(n) as properties"""
+        order_clause = "ORDER BY project, type, name"
 
     query = f"""
     MATCH (p:Project)-[r]->(n)
@@ -82,7 +85,7 @@ async def search_nodes(
         )
       )
     {return_clause}
-    ORDER BY p.name, type, n.name
+    {order_clause}
     LIMIT $limit
     """
 
