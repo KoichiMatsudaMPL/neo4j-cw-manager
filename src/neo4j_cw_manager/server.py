@@ -1,5 +1,5 @@
 import atexit
-from typing import Optional
+from typing import Any, Optional, Union
 
 from mcp.server.fastmcp import FastMCP
 
@@ -84,13 +84,13 @@ async def mermaid_list_blocks(file_path: str) -> str:
 
 
 @mcp.tool()
-async def graph_create_node(labels: str, properties: str) -> str:
+async def graph_create_node(labels: str, properties: Union[str, dict[str, Any]]) -> str:
     """
     Create a node with given labels and properties.
 
     Args:
         labels: Comma-separated list of node labels (e.g., "Person,Employee")
-        properties: JSON string of node properties (e.g., '{"name": "John", "age": 30}')
+        properties: JSON string or dict of node properties (e.g., '{"name": "John", "age": 30}')
 
     Returns:
         JSON string with created node data including element ID.
@@ -101,7 +101,7 @@ async def graph_create_node(labels: str, properties: str) -> str:
 @mcp.tool()
 async def graph_find_nodes(
     labels: Optional[str] = None,
-    properties: Optional[str] = None,
+    properties: Optional[Union[str, dict[str, Any]]] = None,
     limit: int = 100,
 ) -> str:
     """
@@ -109,7 +109,7 @@ async def graph_find_nodes(
 
     Args:
         labels: Optional comma-separated list of labels to match.
-        properties: Optional JSON string of properties to match.
+        properties: Optional JSON string or dict of properties to match.
         limit: Maximum number of results (default: 100).
 
     Returns:
@@ -135,7 +135,7 @@ async def graph_get_node(element_id: str) -> str:
 @mcp.tool()
 async def graph_update_node(
     element_id: str,
-    properties: str,
+    properties: Union[str, dict[str, Any]],
     merge: bool = True,
 ) -> str:
     """
@@ -143,7 +143,7 @@ async def graph_update_node(
 
     Args:
         element_id: Neo4j element ID.
-        properties: JSON string of properties to update.
+        properties: JSON string or dict of properties to update.
         merge: If True, merge with existing properties. If False, replace all.
 
     Returns:
@@ -172,7 +172,7 @@ async def graph_create_relationship(
     from_id: str,
     to_id: str,
     rel_type: str,
-    properties: Optional[str] = None,
+    properties: Optional[Union[str, dict[str, Any]]] = None,
 ) -> str:
     """
     Create a relationship between two nodes.
@@ -181,7 +181,7 @@ async def graph_create_relationship(
         from_id: Source node element ID.
         to_id: Target node element ID.
         rel_type: Relationship type (e.g., "KNOWS", "WORKS_AT").
-        properties: Optional JSON string of relationship properties.
+        properties: Optional JSON string or dict of relationship properties.
 
     Returns:
         JSON string with created relationship data.
@@ -214,7 +214,7 @@ async def graph_find_relationships(
 @mcp.tool()
 async def graph_update_relationship(
     element_id: str,
-    properties: str,
+    properties: Union[str, dict[str, Any]],
     merge: bool = True,
 ) -> str:
     """
@@ -222,7 +222,7 @@ async def graph_update_relationship(
 
     Args:
         element_id: Relationship element ID.
-        properties: JSON string of properties to update.
+        properties: JSON string or dict of properties to update.
         merge: If True, merge with existing properties. If False, replace all.
 
     Returns:
@@ -248,7 +248,7 @@ async def graph_delete_relationship(element_id: str) -> str:
 @mcp.tool()
 async def graph_query(
     query: str,
-    parameters: Optional[str] = None,
+    parameters: Optional[Union[str, dict[str, Any]]] = None,
     write: bool = False,
 ) -> str:
     """
@@ -256,7 +256,7 @@ async def graph_query(
 
     Args:
         query: Cypher query string.
-        parameters: Optional JSON string of query parameters.
+        parameters: Optional JSON string or dict of query parameters.
         write: If True, execute as write transaction.
 
     Returns:
