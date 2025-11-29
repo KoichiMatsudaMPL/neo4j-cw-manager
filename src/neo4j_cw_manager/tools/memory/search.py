@@ -4,6 +4,7 @@ from typing import Optional
 
 from neo4j_cw_manager.core import get_connection, run_query as neo4j_run_query
 
+from .env import get_default_project
 from .utils import format_result
 
 
@@ -17,7 +18,9 @@ async def search_nodes(
 
     Args:
         keyword: Search keyword
-        project: Optional project name to filter results
+        project: Optional project name to filter results.
+                 If None, uses PROJECT environment variable.
+                 If PROJECT is also None, searches across all projects.
         limit: Maximum number of results (default: 100)
 
     Returns:
@@ -26,11 +29,15 @@ async def search_nodes(
     conn = get_connection()
     conn.initialize()
 
-    project_condition = "AND n.project = $project" if project else ""
+    # Use environment variable if project not specified
+    if project is None:
+        project = get_default_project()
 
-    query = f"""
-    MATCH (n)
-    WHERE (
+    query = """
+    MATCH (p:Project)-[r]->(n)
+    WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE']
+      AND ($project IS NULL OR p.name = $project)
+      AND (
         toLower(coalesce(n.name, '')) CONTAINS toLower($keyword)
         OR toLower(coalesce(n.summary, '')) CONTAINS toLower($keyword)
         OR any(key IN keys(n) WHERE
@@ -44,21 +51,18 @@ async def search_nodes(
                 ELSE false
             END
         )
-    )
-    {project_condition}
+      )
     RETURN elementId(n) as element_id,
-           labels(n) as labels,
+           labels(n)[0] as type,
            n.name as name,
            n.summary as summary,
-           n.project as project,
+           p.name as project,
            properties(n) as properties
-    ORDER BY n.name
+    ORDER BY p.name, type, n.name
     LIMIT $limit
     """
 
-    params = {"keyword": keyword, "limit": limit}
-    if project:
-        params["project"] = project
+    params = {"keyword": keyword, "project": project, "limit": limit}
 
     results = neo4j_run_query(query, params, write=False)
     return format_result(results)

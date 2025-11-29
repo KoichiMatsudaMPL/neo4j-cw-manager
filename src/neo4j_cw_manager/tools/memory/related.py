@@ -4,6 +4,7 @@ from typing import Optional
 
 from neo4j_cw_manager.core import get_connection, run_query as neo4j_run_query
 
+from .env import get_default_project
 from .utils import format_result
 
 
@@ -17,7 +18,9 @@ async def get_related_nodes(
 
     Args:
         node_name: Name of the node to search for
-        project: Optional project name to filter the starting node
+        project: Optional project name to filter the starting node.
+                 If None, uses PROJECT environment variable.
+                 If PROJECT is also None, searches across all projects.
         depth: Relationship traversal depth (default: 1)
 
     Returns:
@@ -26,43 +29,60 @@ async def get_related_nodes(
     conn = get_connection()
     conn.initialize()
 
-    where_clause = "WHERE n.name = $node_name"
-    if project:
-        where_clause += " AND n.project = $project"
+    # Use environment variable if project not specified
+    if project is None:
+        project = get_default_project()
 
-    query = f"""
-    MATCH (n)
-    {where_clause}
-    WITH n
-    LIMIT 1
-    CALL {{
+    # depth=0の場合は起点ノードのみを返す
+    if depth == 0:
+        query = """
+        MATCH (p:Project)-[*1..2]->(n {name: $node_name})
+        WHERE $project IS NULL OR p.name = $project
         WITH n
-        MATCH path = (n)-[r*0..{depth}]-(related)
-        WITH n, path, related, relationships(path) as rels
-        RETURN collect(DISTINCT {{
-            element_id: elementId(related),
-            labels: labels(related),
-            name: related.name,
-            summary: related.summary,
-            project: related.project,
-            properties: properties(related)
-        }}) as nodes,
-        [rel in rels | {{
-            from_id: elementId(startNode(rel)),
-            to_id: elementId(endNode(rel)),
-            type: type(rel),
-            properties: properties(rel)
-        }}] as relationships
-    }}
-    RETURN {{
-        nodes: nodes,
-        relationships: relationships
-    }} as result
-    """
+        LIMIT 1
+        RETURN {
+            target: {
+                element_id: elementId(n),
+                labels: labels(n),
+                name: n.name,
+                summary: n.summary,
+                properties: properties(n)
+            },
+            related: []
+        } as result
+        """
+    else:
+        query = f"""
+        MATCH (p:Project)-[*1..2]->(n {{name: $node_name}})
+        WHERE $project IS NULL OR p.name = $project
+        WITH n
+        LIMIT 1
+        OPTIONAL MATCH path = (n)-[r*1..{depth}]-(related)
+        WHERE related <> n
+        WITH n,
+             collect(DISTINCT {{
+                 relationship: type(relationships(path)[-1]),
+                 node: {{
+                     element_id: elementId(related),
+                     labels: labels(related),
+                     name: related.name,
+                     summary: related.summary,
+                     properties: properties(related)
+                 }}
+             }}) as related_items
+        RETURN {{
+            target: {{
+                element_id: elementId(n),
+                labels: labels(n),
+                name: n.name,
+                summary: n.summary,
+                properties: properties(n)
+            }},
+            related: related_items
+        }} as result
+        """
 
-    params = {"node_name": node_name}
-    if project:
-        params["project"] = project
+    params = {"project": project, "node_name": node_name}
 
     results = neo4j_run_query(query, params, write=False)
     return format_result(results)

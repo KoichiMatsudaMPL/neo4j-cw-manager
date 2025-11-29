@@ -11,7 +11,7 @@ ERROR_INVALID_JSON = "Invalid JSON format for properties"
 
 def format_result(data: Any) -> str:
     """Format result as JSON string."""
-    return json.dumps(data, indent=2, default=str)
+    return json.dumps(data, indent=2, default=str, ensure_ascii=False)
 
 
 def parse_properties(properties_json: Optional[str]) -> dict[str, Any]:
