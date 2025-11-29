@@ -11,6 +11,7 @@ from .utils import format_result
 async def search_nodes(
     keyword: str,
     project: Optional[str] = None,
+    fields: Optional[str] = None,
     limit: int = 100,
 ) -> str:
     """
@@ -21,6 +22,9 @@ async def search_nodes(
         project: Optional project name to filter results.
                  If None, uses PROJECT environment variable.
                  If PROJECT is also None, searches across all projects.
+        fields: Optional comma-separated list of property names to return.
+                If None or empty, returns all properties.
+                Example: "category,file_path"
         limit: Maximum number of results (default: 100)
 
     Returns:
@@ -33,7 +37,30 @@ async def search_nodes(
     if project is None:
         project = get_default_project()
 
-    query = """
+    # Build RETURN clause based on fields parameter
+    if fields:
+        field_list = [f.strip() for f in fields.split(",") if f.strip()]
+        if field_list:
+            field_returns = ", ".join([f"n.{field} as {field}" for field in field_list])
+            return_clause = f"RETURN elementId(n) as element_id, {field_returns}"
+        else:
+            # Empty fields list - return all properties
+            return_clause = """RETURN elementId(n) as element_id,
+                   labels(n)[0] as type,
+                   n.name as name,
+                   n.summary as summary,
+                   p.name as project,
+                   properties(n) as properties"""
+    else:
+        # fields not specified - return all properties
+        return_clause = """RETURN elementId(n) as element_id,
+               labels(n)[0] as type,
+               n.name as name,
+               n.summary as summary,
+               p.name as project,
+               properties(n) as properties"""
+
+    query = f"""
     MATCH (p:Project)-[r]->(n)
     WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE', 'HAS_SCREEN']
       AND ($project IS NULL OR p.name = $project)
@@ -54,12 +81,7 @@ async def search_nodes(
             END
         )
       )
-    RETURN elementId(n) as element_id,
-           labels(n)[0] as type,
-           n.name as name,
-           n.summary as summary,
-           p.name as project,
-           properties(n) as properties
+    {return_clause}
     ORDER BY p.name, type, n.name
     LIMIT $limit
     """

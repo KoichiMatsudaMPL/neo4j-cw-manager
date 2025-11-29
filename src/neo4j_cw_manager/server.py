@@ -288,6 +288,7 @@ async def graph_get_index(
 async def graph_search(
     keyword: str,
     project: Optional[str] = None,
+    fields: Optional[str] = None,
     limit: int = 100,
 ) -> str:
     """
@@ -295,13 +296,17 @@ async def graph_search(
 
     Args:
         keyword: Search keyword
-        project: Optional project name to filter results
+        project: Optional project name to filter results.
+                 If None, uses PROJECT environment variable.
+        fields: Optional comma-separated list of property names to return.
+                If None or empty, returns all properties.
+                Example: "category,file_path"
         limit: Maximum number of results (default: 100)
 
     Returns:
         JSON string with list of matching nodes.
     """
-    return await neo4j_search_nodes(keyword, project, limit)
+    return await neo4j_search_nodes(keyword, project, fields, limit)
 
 
 @mcp.tool()
