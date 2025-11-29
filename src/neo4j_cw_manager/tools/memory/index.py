@@ -38,7 +38,7 @@ async def get_index(
         label_condition = " OR ".join([f"labels(n)[0] = '{label}'" for label in type_list])
         query = f"""
         MATCH (p:Project {{name: $project}})-[r]->(n)
-        WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE']
+        WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE', 'HAS_SCREEN']
           AND ({label_condition})
         RETURN elementId(n) as element_id,
                labels(n)[0] as type,
@@ -50,7 +50,7 @@ async def get_index(
     else:
         query = """
         MATCH (p:Project {name: $project})-[r]->(n)
-        WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE']
+        WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE', 'HAS_SCREEN']
         RETURN elementId(n) as element_id,
                labels(n)[0] as type,
                n.name as name,

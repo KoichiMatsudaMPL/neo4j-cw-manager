@@ -35,11 +35,13 @@ async def search_nodes(
 
     query = """
     MATCH (p:Project)-[r]->(n)
-    WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE']
+    WHERE type(r) IN ['HAS_KNOWLEDGE', 'HAS_PROCEDURE', 'HAS_RULE', 'HAS_SCREEN']
       AND ($project IS NULL OR p.name = $project)
       AND (
         toLower(coalesce(n.name, '')) CONTAINS toLower($keyword)
         OR toLower(coalesce(n.summary, '')) CONTAINS toLower($keyword)
+        OR toLower(coalesce(n.japanese_name, '')) CONTAINS toLower($keyword)
+        OR toLower(coalesce(n.alias, '')) CONTAINS toLower($keyword)
         OR any(key IN keys(n) WHERE
             CASE valueType(n[key])
                 WHEN 'STRING' THEN toLower(n[key]) CONTAINS toLower($keyword)
