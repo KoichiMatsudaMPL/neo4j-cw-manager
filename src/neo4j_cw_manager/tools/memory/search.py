@@ -83,7 +83,7 @@ async def search_nodes(
         OR toLower(coalesce(n.title, '')) CONTAINS toLower($keyword)
         OR toLower(coalesce(n.id, '')) CONTAINS toLower($keyword)
         OR any(key IN keys(n) WHERE
-            key NOT IN ['name', 'summary', 'japanese_name', 'alias', 'title', 'id'] AND
+            NOT key IN ['name', 'summary', 'japanese_name', 'alias', 'title', 'id'] AND
             CASE valueType(n[key])
                 WHEN 'STRING' THEN toLower(n[key]) CONTAINS toLower($keyword)
                 WHEN 'INTEGER' THEN toString(n[key]) CONTAINS $keyword
