@@ -26,16 +26,19 @@ async def get_related_nodes(
     conn = get_connection()
     conn.initialize()
 
-    project_condition = "AND n.project = $project" if project else ""
+    where_clause = "WHERE n.name = $node_name"
+    if project:
+        where_clause += " AND n.project = $project"
 
     query = f"""
-    MATCH (n {{name: $node_name}})
-    {project_condition}
+    MATCH (n)
+    {where_clause}
     WITH n
     LIMIT 1
     CALL {{
         WITH n
-        MATCH path = (n)-[*0..{depth}]-(related)
+        MATCH path = (n)-[r*0..{depth}]-(related)
+        WITH n, path, related, relationships(path) as rels
         RETURN collect(DISTINCT {{
             element_id: elementId(related),
             labels: labels(related),
@@ -44,12 +47,12 @@ async def get_related_nodes(
             project: related.project,
             properties: properties(related)
         }}) as nodes,
-        collect(DISTINCT {{
-            from_id: elementId(startNode(relationships(path)[0])),
-            to_id: elementId(endNode(relationships(path)[0])),
-            type: type(relationships(path)[0]),
-            properties: properties(relationships(path)[0])
-        }}) as relationships
+        [rel in rels | {{
+            from_id: elementId(startNode(rel)),
+            to_id: elementId(endNode(rel)),
+            type: type(rel),
+            properties: properties(rel)
+        }}] as relationships
     }}
     RETURN {{
         nodes: nodes,
@@ -57,7 +60,7 @@ async def get_related_nodes(
     }} as result
     """
 
-    params = {"node_name": node_name, "depth": depth}
+    params = {"node_name": node_name}
     if project:
         params["project"] = project
 

@@ -31,9 +31,19 @@ async def search_nodes(
     query = f"""
     MATCH (n)
     WHERE (
-        toLower(n.name) CONTAINS toLower($keyword)
+        toLower(coalesce(n.name, '')) CONTAINS toLower($keyword)
         OR toLower(coalesce(n.summary, '')) CONTAINS toLower($keyword)
-        OR any(key IN keys(n) WHERE toLower(toString(n[key])) CONTAINS toLower($keyword))
+        OR any(key IN keys(n) WHERE
+            CASE valueType(n[key])
+                WHEN 'STRING' THEN toLower(n[key]) CONTAINS toLower($keyword)
+                WHEN 'INTEGER' THEN toString(n[key]) CONTAINS $keyword
+                WHEN 'FLOAT' THEN toString(n[key]) CONTAINS $keyword
+                WHEN 'BOOLEAN' THEN toString(n[key]) CONTAINS $keyword
+                WHEN 'LIST<STRING>' THEN any(item IN n[key] WHERE toLower(item) CONTAINS toLower($keyword))
+                WHEN 'LIST<INTEGER>' THEN any(item IN n[key] WHERE toString(item) CONTAINS $keyword)
+                ELSE false
+            END
+        )
     )
     {project_condition}
     RETURN elementId(n) as element_id,
