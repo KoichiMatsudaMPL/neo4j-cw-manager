@@ -14,8 +14,11 @@ from neo4j_cw_manager.tools import (
     neo4j_delete_relationship,
     neo4j_find_nodes,
     neo4j_find_relationships,
+    neo4j_get_index,
     neo4j_get_node,
+    neo4j_get_related_nodes,
     neo4j_run_cypher_query,
+    neo4j_search_nodes,
     neo4j_update_node,
     neo4j_update_relationship,
 )
@@ -260,6 +263,65 @@ async def graph_query(
         JSON string with query results.
     """
     return await neo4j_run_cypher_query(query, parameters, write)
+
+
+@mcp.tool()
+async def graph_get_index(
+    project: str,
+    types: Optional[str] = None,
+) -> str:
+    """
+    Get index of knowledge/procedure nodes for a specific project.
+
+    Args:
+        project: Project name (e.g., "bravio-app", "common")
+        types: Optional comma-separated list of node types to filter
+               (e.g., "KnowledgeNode,Procedure")
+
+    Returns:
+        JSON string with list of nodes including name, type, summary.
+    """
+    return await neo4j_get_index(project, types)
+
+
+@mcp.tool()
+async def graph_search(
+    keyword: str,
+    project: Optional[str] = None,
+    limit: int = 100,
+) -> str:
+    """
+    Search nodes by keyword in name, summary, and properties.
+
+    Args:
+        keyword: Search keyword
+        project: Optional project name to filter results
+        limit: Maximum number of results (default: 100)
+
+    Returns:
+        JSON string with list of matching nodes.
+    """
+    return await neo4j_search_nodes(keyword, project, limit)
+
+
+@mcp.tool()
+async def graph_get_related(
+    node_name: str,
+    project: Optional[str] = None,
+    depth: int = 1,
+) -> str:
+    """
+    Get a node and its related nodes up to specified depth.
+
+    Args:
+        node_name: Name of the node to search for
+        project: Optional project name to filter the starting node
+        depth: Relationship traversal depth (default: 1)
+
+    Returns:
+        JSON string with the target node and related nodes with relationships.
+    """
+    return await neo4j_get_related_nodes(node_name, project, depth)
 
 
 @mcp.resource("greeting://{name}")

@@ -35,7 +35,17 @@ class Neo4jConfig:
         if env_file:
             load_dotenv(env_file)
         else:
-            load_dotenv()
+            # Find project root by looking for pyproject.toml
+            current = Path(__file__).resolve()
+            for parent in [current.parent] + list(current.parents):
+                env_path = parent / ".env"
+                pyproject_path = parent / "pyproject.toml"
+                if pyproject_path.exists() and env_path.exists():
+                    load_dotenv(env_path)
+                    break
+            else:
+                # Fallback to default behavior
+                load_dotenv()
 
         uri = os.getenv("NEO4J_URI")
         user = os.getenv("NEO4J_USER")
