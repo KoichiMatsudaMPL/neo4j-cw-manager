@@ -15,8 +15,10 @@ from .memory import (
     find_nodes as neo4j_find_nodes,
     find_relationships as neo4j_find_relationships,
     get_index as neo4j_get_index,
+    get_issues_by_id as neo4j_get_issues_by_id,
     get_node as neo4j_get_node,
     get_related_nodes as neo4j_get_related_nodes,
+    list_incomplete_issues as neo4j_list_incomplete_issues,
     run_cypher_query as neo4j_run_cypher_query,
     search_nodes as neo4j_search_nodes,
     update_node as neo4j_update_node,
@@ -43,4 +45,7 @@ __all__ = [
     "neo4j_get_index",
     "neo4j_search_nodes",
     "neo4j_get_related_nodes",
+    # Issue tools
+    "neo4j_get_issues_by_id",
+    "neo4j_list_incomplete_issues",
 ]

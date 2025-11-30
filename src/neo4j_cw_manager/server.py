@@ -15,8 +15,10 @@ from neo4j_cw_manager.tools import (
     neo4j_find_nodes,
     neo4j_find_relationships,
     neo4j_get_index,
+    neo4j_get_issues_by_id,
     neo4j_get_node,
     neo4j_get_related_nodes,
+    neo4j_list_incomplete_issues,
     neo4j_run_cypher_query,
     neo4j_search_nodes,
     neo4j_update_node,
@@ -327,6 +329,50 @@ async def graph_get_related(
         JSON string with the target node and related nodes with relationships.
     """
     return await neo4j_get_related_nodes(node_name, project, depth)
+
+
+@mcp.tool()
+async def graph_list_incomplete_issues(
+    project: Optional[str] = None,
+    limit: int = 100,
+    order_by: str = "updated_at",
+    direction: str = "DESC",
+) -> str:
+    """
+    List incomplete (not completed/closed/done) issues.
+
+    Args:
+        project: Optional project name to filter results.
+                 If None, uses PROJECT environment variable.
+        limit: Maximum number of results (default: 100)
+        order_by: Sort field (created_at, updated_at, number). Default: updated_at
+        direction: Sort direction (ASC or DESC). Default: DESC
+
+    Returns:
+        JSON string with list of incomplete issues.
+    """
+    return await neo4j_list_incomplete_issues(project, limit, order_by, direction)
+
+
+@mcp.tool()
+async def graph_get_issues_by_id(
+    issue_numbers: str,
+    project: Optional[str] = None,
+) -> str:
+    """
+    Get Issue nodes by their issue numbers.
+
+    Args:
+        issue_numbers: Comma-separated list of issue numbers.
+                       Example: "705,704" or "705"
+                       Can be a single number or multiple numbers.
+        project: Optional project name to filter results.
+                 If None, uses PROJECT environment variable.
+
+    Returns:
+        JSON string with list of matching issues (0 or more).
+    """
+    return await neo4j_get_issues_by_id(issue_numbers, project)
 
 
 @mcp.resource("greeting://{name}")
