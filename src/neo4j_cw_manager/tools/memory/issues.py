@@ -138,3 +138,107 @@ async def get_issues_by_id(
 
     results = neo4j_run_query(query, params, write=False)
     return format_result(results)
+
+
+async def upsert_issue(
+    number: int,
+    title: Optional[str] = None,
+    project: Optional[str] = None,
+    summary: Optional[str] = None,
+    status: Optional[str] = None,
+    url: Optional[str] = None,
+) -> str:
+    """
+    Create or update an Issue node.
+
+    Args:
+        number: Issue number (required)
+        title: Issue title (required for creation, optional for update)
+        project: Project name. If None, uses PROJECT environment variable.
+        summary: Issue summary (optional)
+        status: Issue status (optional, default: "open" for new issues)
+        url: GitHub URL (optional)
+
+    Returns:
+        JSON string with the created or updated issue data.
+    """
+    from datetime import datetime, timezone
+
+    conn = get_connection()
+    conn.initialize()
+
+    # Use environment variable if project not specified
+    if project is None:
+        project = get_default_project()
+
+    if project is None:
+        return json.dumps({"error": "Project must be specified or set in PROJECT environment variable"})
+
+    # Validate number
+    if number <= 0:
+        return json.dumps({"error": "Issue number must be a positive integer"})
+
+    # Generate automatic values
+    issue_id = f"{project}-issue-{number}"
+    issue_name = f"Issue #{number}"
+    current_time = datetime.now(timezone.utc).isoformat()
+
+    # Build ON CREATE SET clause (all properties)
+    on_create_props = {
+        "id": issue_id,
+        "name": issue_name,
+        "title": title or "",
+        "summary": summary,
+        "status": status or "open",
+        "url": url,
+        "created_at": current_time,
+        "updated_at": current_time,
+    }
+
+    # Build ON MATCH SET clause (only specified properties + updated_at)
+    on_match_props = {"updated_at": current_time}
+    if title is not None:
+        on_match_props["title"] = title
+    if summary is not None:
+        on_match_props["summary"] = summary
+    if status is not None:
+        on_match_props["status"] = status
+    if url is not None:
+        on_match_props["url"] = url
+
+    # Build SET clauses dynamically
+    on_create_set = ", ".join([f"i.{key} = $create_{key}" for key in on_create_props.keys()])
+    on_match_set = ", ".join([f"i.{key} = $match_{key}" for key in on_match_props.keys()])
+
+    # Build query
+    query = f"""
+    MATCH (p:Project {{name: $project}})
+    MERGE (p)-[:HAS_ISSUE]->(i:Issue {{number: $number, project: $project}})
+    ON CREATE SET {on_create_set}
+    ON MATCH SET {on_match_set}
+    RETURN elementId(i) as element_id,
+           i.id as id,
+           i.number as number,
+           i.title as title,
+           i.status as status,
+           i.project as project,
+           i.summary as summary,
+           i.url as url,
+           i.created_at as created_at,
+           i.updated_at as updated_at
+    """
+
+    # Build parameters
+    params = {"project": project, "number": number}
+    for key, value in on_create_props.items():
+        params[f"create_{key}"] = value
+    for key, value in on_match_props.items():
+        params[f"match_{key}"] = value
+
+    try:
+        results = neo4j_run_query(query, params, write=True)
+        if not results:
+            return json.dumps({"error": f"Project '{project}' not found"})
+        return format_result(results)
+    except Exception as e:
+        return json.dumps({"error": str(e)})

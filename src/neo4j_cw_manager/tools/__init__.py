@@ -23,6 +23,7 @@ from .memory import (
     search_nodes as neo4j_search_nodes,
     update_node as neo4j_update_node,
     update_relationship as neo4j_update_relationship,
+    upsert_issue as neo4j_upsert_issue,
 )
 
 __all__ = [
@@ -48,4 +49,5 @@ __all__ = [
     # Issue tools
     "neo4j_get_issues_by_id",
     "neo4j_list_incomplete_issues",
+    "neo4j_upsert_issue",
 ]

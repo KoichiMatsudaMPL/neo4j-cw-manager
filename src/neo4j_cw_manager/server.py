@@ -23,6 +23,7 @@ from neo4j_cw_manager.tools import (
     neo4j_search_nodes,
     neo4j_update_node,
     neo4j_update_relationship,
+    neo4j_upsert_issue,
 )
 
 mcp = FastMCP("neo4j-cw-manager")
@@ -373,6 +374,33 @@ async def graph_get_issues_by_id(
         JSON string with list of matching issues (0 or more).
     """
     return await neo4j_get_issues_by_id(issue_numbers, project)
+
+
+@mcp.tool()
+async def graph_upsert_issue(
+    number: int,
+    title: Optional[str] = None,
+    project: Optional[str] = None,
+    summary: Optional[str] = None,
+    status: Optional[str] = None,
+    url: Optional[str] = None,
+) -> str:
+    """
+    Create or update an Issue node.
+
+    Args:
+        number: Issue number (required)
+        title: Issue title (required for creation, optional for update)
+        project: Project name. If None, uses PROJECT environment variable.
+        summary: Issue summary (optional)
+        status: Issue status (optional, default: "open" for new issues)
+        url: GitHub URL (optional)
+
+    Returns:
+        JSON string with the created or updated issue data.
+        created_at and updated_at are automatically set.
+    """
+    return await neo4j_upsert_issue(number, title, project, summary, status, url)
 
 
 @mcp.resource("greeting://{name}")

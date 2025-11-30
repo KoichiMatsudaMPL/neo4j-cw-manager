@@ -1,7 +1,7 @@
 """Memory tools using Neo4j for graph database operations."""
 
 from .index import get_index
-from .issues import get_issues_by_id, list_incomplete_issues
+from .issues import get_issues_by_id, list_incomplete_issues, upsert_issue
 from .nodes import create_node, delete_node, find_nodes, get_node, update_node
 from .query import run_cypher_query
 from .related import get_related_nodes
@@ -34,4 +34,5 @@ __all__ = [
     # Issue operations
     "get_issues_by_id",
     "list_incomplete_issues",
+    "upsert_issue",
 ]
