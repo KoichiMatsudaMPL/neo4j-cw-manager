@@ -29,7 +29,7 @@ async def list_incomplete_issues(
         direction: Sort direction (ASC or DESC). Default: DESC
 
     Returns:
-        JSON string with list of incomplete issues.
+        JSON string with list of incomplete issues and total count.
     """
     conn = get_connection()
     conn.initialize()
@@ -58,7 +58,15 @@ async def list_incomplete_issues(
         )
 
     # Build the query to match Issue through any Project relationship (direct or indirect)
-    query = f"""
+    # First get total count, then get limited results
+    count_query = """
+    MATCH (p:Project)-[*1..3]->(n:Issue)
+    WHERE ($project IS NULL OR p.name = $project)
+      AND (n.status IS NULL OR NOT n.status IN ['completed', 'closed', 'done'])
+    RETURN count(n) as total_count
+    """
+
+    data_query = f"""
     MATCH (p:Project)-[*1..3]->(n:Issue)
     WHERE ($project IS NULL OR p.name = $project)
       AND (n.status IS NULL OR NOT n.status IN ['completed', 'closed', 'done'])
@@ -78,8 +86,21 @@ async def list_incomplete_issues(
 
     params = {"project": project, "limit": limit}
 
-    results = neo4j_run_query(query, params, write=False)
-    return format_result(results)
+    # Get total count
+    count_results = neo4j_run_query(count_query, params, write=False)
+    total_count = count_results[0]["total_count"] if count_results else 0
+
+    # Get data
+    data_results = neo4j_run_query(data_query, params, write=False)
+
+    # Build response with count
+    response = {
+        "total_count": total_count,
+        "returned_count": len(data_results),
+        "issues": data_results
+    }
+
+    return json.dumps(response, ensure_ascii=False, indent=2)
 
 
 async def get_issues_by_id(
