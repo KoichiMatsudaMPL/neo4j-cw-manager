@@ -32,20 +32,27 @@ class Neo4jConfig:
         Raises:
             ValueError: If required environment variables are not set.
         """
-        if env_file:
-            load_dotenv(env_file)
-        else:
-            # Find project root by looking for pyproject.toml
-            current = Path(__file__).resolve()
-            for parent in [current.parent] + list(current.parents):
-                env_path = parent / ".env"
-                pyproject_path = parent / "pyproject.toml"
-                if pyproject_path.exists() and env_path.exists():
-                    load_dotenv(env_path)
-                    break
+        # Environment variables passed to the process take precedence
+        # Only load .env file if environment variables are not already set
+        if not all([
+            os.getenv("NEO4J_URI"),
+            os.getenv("NEO4J_USER"),
+            os.getenv("NEO4J_PASSWORD"),
+        ]):
+            if env_file:
+                load_dotenv(env_file)
             else:
-                # Fallback to default behavior
-                load_dotenv()
+                # Find project root by looking for pyproject.toml
+                current = Path(__file__).resolve()
+                for parent in [current.parent] + list(current.parents):
+                    env_path = parent / ".env"
+                    pyproject_path = parent / "pyproject.toml"
+                    if pyproject_path.exists() and env_path.exists():
+                        load_dotenv(env_path)
+                        break
+                else:
+                    # Fallback to default behavior
+                    load_dotenv()
 
         uri = os.getenv("NEO4J_URI")
         user = os.getenv("NEO4J_USER")
