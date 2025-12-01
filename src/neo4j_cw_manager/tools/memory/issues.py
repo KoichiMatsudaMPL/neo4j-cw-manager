@@ -231,9 +231,10 @@ async def upsert_issue(
     on_create_set = ", ".join([f"i.{key} = $create_{key}" for key in on_create_props.keys()])
     on_match_set = ", ".join([f"i.{key} = $match_{key}" for key in on_match_props.keys()])
 
-    # Build query
+    # Build query with auto-create Project
     query = f"""
-    MATCH (p:Project {{name: $project}})
+    MERGE (p:Project {{name: $project}})
+    ON CREATE SET p.id = $project_id, p.created_at = $project_created_at
     MERGE (p)-[:HAS_ISSUE]->(i:Issue {{number: $number, project: $project}})
     ON CREATE SET {on_create_set}
     ON MATCH SET {on_match_set}
@@ -250,7 +251,12 @@ async def upsert_issue(
     """
 
     # Build parameters
-    params = {"project": project, "number": number}
+    params = {
+        "project": project,
+        "number": number,
+        "project_id": f"project-{project}",
+        "project_created_at": current_time,
+    }
     for key, value in on_create_props.items():
         params[f"create_{key}"] = value
     for key, value in on_match_props.items():
@@ -258,8 +264,6 @@ async def upsert_issue(
 
     try:
         results = neo4j_run_query(query, params, write=True)
-        if not results:
-            return json.dumps({"error": f"Project '{project}' not found"})
         return format_result(results)
     except Exception as e:
         return json.dumps({"error": str(e)})

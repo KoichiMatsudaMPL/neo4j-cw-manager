@@ -136,7 +136,12 @@ def get_connection() -> Neo4jConnection:
     """
     Get the Neo4j connection instance.
 
+    Automatically initializes the connection if not already initialized.
+
     Returns:
         Neo4jConnection singleton instance.
     """
-    return Neo4jConnection()
+    conn = Neo4jConnection()
+    if conn._driver is None:
+        conn.initialize()
+    return conn
