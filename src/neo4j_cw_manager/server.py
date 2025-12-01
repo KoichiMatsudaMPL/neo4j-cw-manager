@@ -30,6 +30,13 @@ mcp = FastMCP("neo4j-cw-manager")
 
 
 @mcp.tool()
+def debug_env() -> str:
+    """Debug: Check environment variable NEO4J_DATABASE"""
+    import os
+    return f"NEO4J_DATABASE = {os.getenv('NEO4J_DATABASE', 'NOT SET')}"
+
+
+@mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers"""
     return a + b

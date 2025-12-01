@@ -66,7 +66,10 @@ class Neo4jConnection:
             Neo4j session instance.
         """
         # Read database name from environment variable on each session creation
-        database = os.getenv("NEO4J_DATABASE", "server")
+        import sys
+        env_value = os.getenv("NEO4J_DATABASE")
+        database = env_value if env_value is not None else "server"
+        print(f"[DEBUG] NEO4J_DATABASE env: {env_value}, using: {database}", file=sys.stderr, flush=True)
         session = self.driver.session(database=database)
         try:
             yield session
