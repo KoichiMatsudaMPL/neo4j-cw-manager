@@ -1,5 +1,6 @@
 """Neo4j connection management."""
 
+import os
 from contextlib import contextmanager
 from typing import Any, Generator, Optional
 
@@ -9,7 +10,7 @@ from .config import Neo4jConfig
 
 
 class Neo4jConnection:
-    """Manages Neo4j database connection."""
+    """Manages Neo4j database connection using Singleton pattern."""
 
     _instance: Optional["Neo4jConnection"] = None
     _driver: Optional[Driver] = None
@@ -21,20 +22,15 @@ class Neo4jConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize(self, config: Optional[Neo4jConfig] = None, force: bool = False) -> None:
+    def initialize(self, config: Optional[Neo4jConfig] = None) -> None:
         """
         Initialize the connection with configuration.
 
         Args:
             config: Neo4j configuration. If None, loads from environment.
-            force: If True, reinitialize even if already initialized.
         """
-        if self._driver is not None and not force:
-            return
-
-        # Close existing connection if reinitializing
         if self._driver is not None:
-            self._driver.close()
+            return
 
         self._config = config or Neo4jConfig.from_env()
         self._driver = GraphDatabase.driver(
@@ -58,29 +54,20 @@ class Neo4jConnection:
             )
         return self._driver
 
-    @property
-    def database(self) -> str:
-        """Get the database name."""
-        if self._config is None:
-            raise RuntimeError(
-                "Neo4j connection not initialized. Call initialize() first."
-            )
-        return self._config.database
-
     @contextmanager
     def session(self) -> Generator[Session, None, None]:
         """
         Create a session context manager.
 
+        Database name is read from environment variable on each session creation,
+        allowing dynamic database switching without driver reinitialization.
+
         Yields:
             Neo4j session instance.
         """
-        import sys
-        db = self.database
-        print(f"[SESSION] database property: {db}", file=sys.stderr)
-        print(f"[SESSION] type: {type(db)}, repr: {repr(db)}", file=sys.stderr)
-        session = self.driver.session(database=db)
-        print(f"[SESSION] Session created successfully", file=sys.stderr)
+        # Read database name from environment variable on each session creation
+        database = os.getenv("NEO4J_DATABASE", "neo4j")
+        session = self.driver.session(database=database)
         try:
             yield session
         finally:
@@ -147,23 +134,11 @@ def get_connection() -> Neo4jConnection:
     Get the Neo4j connection instance.
 
     Automatically initializes the connection if not already initialized.
-    Reinitializes if environment variables have changed.
 
     Returns:
         Neo4jConnection singleton instance.
     """
-    import os
-
     conn = Neo4jConnection()
-
-    # Check if we need to (re)initialize
     if conn._driver is None:
         conn.initialize()
-    elif conn._config is not None:
-        # Check if environment variables have changed
-        current_db = os.getenv("NEO4J_DATABASE", "neo4j")
-        if current_db != conn._config.database:
-            # Environment changed, reinitialize
-            conn.initialize(force=True)
-
     return conn

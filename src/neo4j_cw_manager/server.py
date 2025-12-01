@@ -417,22 +417,24 @@ def get_server_info() -> str:
 
 @mcp.resource("info://neo4j-config")
 def get_neo4j_config() -> str:
-    """Get current Neo4j connection configuration"""
+    """Get current Neo4j connection configuration and environment variables"""
     import os
     import json
 
     conn = get_connection()
     try:
         config_info = {
-            "database": conn.database,
-            "uri": conn._config.uri if conn._config else "Not initialized",
-            "user": conn._config.user if conn._config else "Not initialized",
+            "connection": {
+                "uri": conn._config.uri if conn._config else "Not initialized",
+                "user": conn._config.user if conn._config else "Not initialized",
+            },
             "env_vars": {
-                "NEO4J_DATABASE": os.getenv("NEO4J_DATABASE", "Not set"),
+                "NEO4J_DATABASE": os.getenv("NEO4J_DATABASE", "Not set (defaults to 'neo4j')"),
                 "NEO4J_URI": os.getenv("NEO4J_URI", "Not set"),
                 "NEO4J_USER": os.getenv("NEO4J_USER", "Not set"),
                 "PROJECT": os.getenv("PROJECT", "Not set"),
-            }
+            },
+            "note": "Database name is read from NEO4J_DATABASE environment variable on each session creation"
         }
         return json.dumps(config_info, indent=2)
     except Exception as e:

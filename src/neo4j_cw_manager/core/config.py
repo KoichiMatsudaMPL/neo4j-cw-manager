@@ -15,12 +15,14 @@ class Neo4jConfig:
     uri: str
     user: str
     password: str
-    database: str = "neo4j"
 
     @classmethod
     def from_env(cls, env_file: Optional[Path] = None) -> "Neo4jConfig":
         """
         Load configuration from environment variables.
+
+        Environment variables take precedence over .env file values.
+        The .env file is loaded only as a fallback for missing variables.
 
         Args:
             env_file: Optional path to .env file. If None, searches in current
@@ -32,8 +34,7 @@ class Neo4jConfig:
         Raises:
             ValueError: If required environment variables are not set.
         """
-        # Load .env file as fallback, but never override existing environment variables
-        # This ensures environment variables passed by MCP clients always take precedence
+        # Load .env file as fallback, never override existing environment variables
         if env_file:
             load_dotenv(env_file, override=False)
         else:
@@ -52,7 +53,6 @@ class Neo4jConfig:
         uri = os.getenv("NEO4J_URI")
         user = os.getenv("NEO4J_USER")
         password = os.getenv("NEO4J_PASSWORD")
-        database = os.getenv("NEO4J_DATABASE", "neo4j")
 
         missing = []
         if not uri:
@@ -67,4 +67,4 @@ class Neo4jConfig:
                 f"Missing required environment variables: {', '.join(missing)}"
             )
 
-        return cls(uri=uri, user=user, password=password, database=database)
+        return cls(uri=uri, user=user, password=password)
