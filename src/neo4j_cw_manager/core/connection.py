@@ -73,9 +73,9 @@ class Neo4jConnection:
         import sys
         db = self.database
         print(f"[SESSION] database property: {db}", file=sys.stderr)
-        print(f"[SESSION] Creating session with database={db}", file=sys.stderr)
+        print(f"[SESSION] type: {type(db)}, repr: {repr(db)}", file=sys.stderr)
         session = self.driver.session(database=db)
-        print(f"[SESSION] Session created, database: {session._database}", file=sys.stderr)
+        print(f"[SESSION] Session created successfully", file=sys.stderr)
         try:
             yield session
         finally:
