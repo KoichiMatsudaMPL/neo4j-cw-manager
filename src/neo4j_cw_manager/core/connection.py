@@ -21,15 +21,20 @@ class Neo4jConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize(self, config: Optional[Neo4jConfig] = None) -> None:
+    def initialize(self, config: Optional[Neo4jConfig] = None, force: bool = False) -> None:
         """
         Initialize the connection with configuration.
 
         Args:
             config: Neo4j configuration. If None, loads from environment.
+            force: If True, reinitialize even if already initialized.
         """
-        if self._driver is not None:
+        if self._driver is not None and not force:
             return
+
+        # Close existing connection if reinitializing
+        if self._driver is not None:
+            self._driver.close()
 
         self._config = config or Neo4jConfig.from_env()
         self._driver = GraphDatabase.driver(
@@ -142,11 +147,23 @@ def get_connection() -> Neo4jConnection:
     Get the Neo4j connection instance.
 
     Automatically initializes the connection if not already initialized.
+    Reinitializes if environment variables have changed.
 
     Returns:
         Neo4jConnection singleton instance.
     """
+    import os
+
     conn = Neo4jConnection()
+
+    # Check if we need to (re)initialize
     if conn._driver is None:
         conn.initialize()
+    elif conn._config is not None:
+        # Check if environment variables have changed
+        current_db = os.getenv("NEO4J_DATABASE", "neo4j")
+        if current_db != conn._config.database:
+            # Environment changed, reinitialize
+            conn.initialize(force=True)
+
     return conn
