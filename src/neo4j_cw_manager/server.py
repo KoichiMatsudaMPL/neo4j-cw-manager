@@ -415,6 +415,30 @@ def get_server_info() -> str:
     return "This is a sample MCP server for neo4j-cw-manager"
 
 
+@mcp.resource("info://neo4j-config")
+def get_neo4j_config() -> str:
+    """Get current Neo4j connection configuration"""
+    import os
+    import json
+
+    conn = get_connection()
+    try:
+        config_info = {
+            "database": conn.database,
+            "uri": conn._config.uri if conn._config else "Not initialized",
+            "user": conn._config.user if conn._config else "Not initialized",
+            "env_vars": {
+                "NEO4J_DATABASE": os.getenv("NEO4J_DATABASE", "Not set"),
+                "NEO4J_URI": os.getenv("NEO4J_URI", "Not set"),
+                "NEO4J_USER": os.getenv("NEO4J_USER", "Not set"),
+                "PROJECT": os.getenv("PROJECT", "Not set"),
+            }
+        }
+        return json.dumps(config_info, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
 def _cleanup_neo4j() -> None:
     """Close Neo4j connection on exit."""
     try:
