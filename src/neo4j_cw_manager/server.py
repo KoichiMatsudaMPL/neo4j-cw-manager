@@ -29,6 +29,13 @@ from neo4j_cw_manager.tools import (
 mcp = FastMCP("neo4j-cw-manager")
 
 
+@mcp.on_startup()
+async def startup():
+    """Initialize Neo4j connection on server startup."""
+    conn = get_connection()
+    conn.initialize()
+
+
 @mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers"""
