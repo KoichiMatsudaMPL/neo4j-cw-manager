@@ -54,11 +54,6 @@ class Neo4jConfig:
         password = os.getenv("NEO4J_PASSWORD")
         database = os.getenv("NEO4J_DATABASE", "neo4j")
 
-        # Debug: Log the database value being used
-        import sys
-        print(f"[Neo4j Config] Using database: {database}", file=sys.stderr)
-        print(f"[Neo4j Config] NEO4J_DATABASE env var: {os.getenv('NEO4J_DATABASE')}", file=sys.stderr)
-
         missing = []
         if not uri:
             missing.append("NEO4J_URI")
