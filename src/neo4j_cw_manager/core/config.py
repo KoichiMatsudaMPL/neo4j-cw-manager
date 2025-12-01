@@ -32,32 +32,32 @@ class Neo4jConfig:
         Raises:
             ValueError: If required environment variables are not set.
         """
-        # Environment variables passed to the process take precedence
-        # Only load .env file if environment variables are not already set
-        if not all([
-            os.getenv("NEO4J_URI"),
-            os.getenv("NEO4J_USER"),
-            os.getenv("NEO4J_PASSWORD"),
-        ]):
-            if env_file:
-                load_dotenv(env_file)
+        # Load .env file as fallback, but never override existing environment variables
+        # This ensures environment variables passed by MCP clients always take precedence
+        if env_file:
+            load_dotenv(env_file, override=False)
+        else:
+            # Find project root by looking for pyproject.toml
+            current = Path(__file__).resolve()
+            for parent in [current.parent] + list(current.parents):
+                env_path = parent / ".env"
+                pyproject_path = parent / "pyproject.toml"
+                if pyproject_path.exists() and env_path.exists():
+                    load_dotenv(env_path, override=False)
+                    break
             else:
-                # Find project root by looking for pyproject.toml
-                current = Path(__file__).resolve()
-                for parent in [current.parent] + list(current.parents):
-                    env_path = parent / ".env"
-                    pyproject_path = parent / "pyproject.toml"
-                    if pyproject_path.exists() and env_path.exists():
-                        load_dotenv(env_path)
-                        break
-                else:
-                    # Fallback to default behavior
-                    load_dotenv()
+                # Fallback to default behavior
+                load_dotenv(override=False)
 
         uri = os.getenv("NEO4J_URI")
         user = os.getenv("NEO4J_USER")
         password = os.getenv("NEO4J_PASSWORD")
         database = os.getenv("NEO4J_DATABASE", "neo4j")
+
+        # Debug: Log the database value being used
+        import sys
+        print(f"[Neo4j Config] Using database: {database}", file=sys.stderr)
+        print(f"[Neo4j Config] NEO4J_DATABASE env var: {os.getenv('NEO4J_DATABASE')}", file=sys.stderr)
 
         missing = []
         if not uri:
