@@ -57,20 +57,18 @@ async def list_incomplete_issues(
             }
         )
 
-    # Build the query to match Issue through any Project relationship (direct or indirect)
-    # First get total count, then get limited results
+    # Query Issue nodes directly using project property
     count_query = """
-    MATCH (p:Project)-[*1..3]->(n:Issue)
-    WHERE ($project IS NULL OR p.name = $project)
+    MATCH (n:Issue)
+    WHERE ($project IS NULL OR n.project = $project)
       AND (n.status IS NULL OR NOT n.status IN ['completed', 'closed', 'done'])
-    RETURN count(DISTINCT n) as total_count
+    RETURN count(n) as total_count
     """
 
     data_query = f"""
-    MATCH (p:Project)-[*1..3]->(n:Issue)
-    WHERE ($project IS NULL OR p.name = $project)
+    MATCH (n:Issue)
+    WHERE ($project IS NULL OR n.project = $project)
       AND (n.status IS NULL OR NOT n.status IN ['completed', 'closed', 'done'])
-    WITH DISTINCT n
     RETURN elementId(n) as element_id,
            n.id as id,
            n.number as number,
@@ -98,7 +96,7 @@ async def list_incomplete_issues(
     response = {
         "total_count": total_count,
         "returned_count": len(data_results),
-        "issues": data_results
+        "issues": data_results,
     }
 
     return json.dumps(response, ensure_ascii=False, indent=2)
@@ -131,19 +129,22 @@ async def get_issues_by_id(
 
     # Parse comma-separated numbers
     try:
-        number_list = [int(num.strip()) for num in issue_numbers.split(",") if num.strip()]
+        number_list = [
+            int(num.strip()) for num in issue_numbers.split(",") if num.strip()
+        ]
     except ValueError:
-        return json.dumps({"error": "Invalid issue number format. Must be comma-separated integers."})
+        return json.dumps(
+            {"error": "Invalid issue number format. Must be comma-separated integers."}
+        )
 
     if not number_list:
         return json.dumps({"error": "No valid issue numbers provided"})
 
-    # Build the query to match Issue through any Project relationship (direct or indirect)
+    # Query Issue nodes directly using project property
     query = """
-    MATCH (p:Project)-[*1..3]->(n:Issue)
+    MATCH (n:Issue)
     WHERE n.number IN $number_list
-      AND ($project IS NULL OR p.name = $project)
-    WITH DISTINCT n
+      AND ($project IS NULL OR n.project = $project)
     RETURN elementId(n) as element_id,
            n.id as id,
            n.number as number,
@@ -195,7 +196,11 @@ async def upsert_issue(
         project = get_default_project()
 
     if project is None:
-        return json.dumps({"error": "Project must be specified or set in PROJECT environment variable"})
+        return json.dumps(
+            {
+                "error": "Project must be specified or set in PROJECT environment variable"
+            }
+        )
 
     # Validate number
     if number <= 0:
@@ -230,8 +235,12 @@ async def upsert_issue(
         on_match_props["url"] = url
 
     # Build SET clauses dynamically
-    on_create_set = ", ".join([f"i.{key} = $create_{key}" for key in on_create_props.keys()])
-    on_match_set = ", ".join([f"i.{key} = $match_{key}" for key in on_match_props.keys()])
+    on_create_set = ", ".join(
+        [f"i.{key} = $create_{key}" for key in on_create_props.keys()]
+    )
+    on_match_set = ", ".join(
+        [f"i.{key} = $match_{key}" for key in on_match_props.keys()]
+    )
 
     # Build query with auto-create Project
     query = f"""
