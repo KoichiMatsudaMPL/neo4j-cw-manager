@@ -70,7 +70,8 @@ async def list_incomplete_issues(
     MATCH (p:Project)-[*1..3]->(n:Issue)
     WHERE ($project IS NULL OR p.name = $project)
       AND (n.status IS NULL OR NOT n.status IN ['completed', 'closed', 'done'])
-    RETURN DISTINCT elementId(n) as element_id,
+    WITH DISTINCT n
+    RETURN elementId(n) as element_id,
            n.id as id,
            n.number as number,
            n.title as title,
@@ -142,7 +143,8 @@ async def get_issues_by_id(
     MATCH (p:Project)-[*1..3]->(n:Issue)
     WHERE n.number IN $number_list
       AND ($project IS NULL OR p.name = $project)
-    RETURN DISTINCT elementId(n) as element_id,
+    WITH DISTINCT n
+    RETURN elementId(n) as element_id,
            n.id as id,
            n.number as number,
            n.title as title,
